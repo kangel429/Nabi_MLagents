@@ -10,6 +10,9 @@ public class PushAgentBasic : Agent
     /// <summary>
     /// The ground. The bounds are used to spawn the elements.
     /// </summary>
+    ///
+    public GameObject hand;
+    public GameObject nabi;
     public GameObject ground;
 
     public GameObject area;
@@ -43,6 +46,16 @@ public class PushAgentBasic : Agent
     Rigidbody m_BlockRb;  //cached on initialization
     Rigidbody m_AgentRb;  //cached on initialization
     Material m_GroundMaterial; //cached on Awake()
+
+
+
+
+    Vector3 nabiPosition ;
+    Vector3 handTargetPosition  ;
+    Vector3 diffrenceDistance_nabi_hand ;
+    float easing ;
+    float diffrenceDistance = 7.0f;
+    Vector3 direction;
 
     /// <summary>
     /// We will be changing the ground material based on success/failue
@@ -135,25 +148,35 @@ public class PushAgentBasic : Agent
 
         var action = act[0];
 
+
+        nabiPosition = transform.position;
+        handTargetPosition = new Vector3(hand.transform.position.x, hand.transform.position.y, hand.transform.position.z);
+        diffrenceDistance_nabi_hand = handTargetPosition - nabiPosition;
+        easing = 7f * Time.deltaTime;
+        nabiPosition += diffrenceDistance_nabi_hand * easing;
+
+        direction = diffrenceDistance_nabi_hand / diffrenceDistance_nabi_hand.magnitude;
         switch (action)
         {
             case 1:
+                //Debug.Log("ssssss");
                 dirToGo = transform.forward * 1f;
+                //dirToGo = new Vector3(0.3f, 0, 0);
                 break;
             case 2:
-                dirToGo = transform.forward * -1f;
+                //dirToGo = transform.forward * -1f;
                 break;
             case 3:
-                rotateDir = transform.up * 1f;
+                //rotateDir = transform.right * 1f;
                 break;
             case 4:
-                rotateDir = transform.up * -1f;
+                //rotateDir = transform.right * -1f;
                 break;
             case 5:
-                dirToGo = transform.right * -0.75f;
+               // dirToGo = transform.right * -0.75f;
                 break;
             case 6:
-                dirToGo = transform.right * 0.75f;
+                //dirToGo = transform.right * 0.75f;
                 break;
         }
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
@@ -173,29 +196,67 @@ public class PushAgentBasic : Agent
         // Penalty given each step to encourage agent to finish task quickly.
         AddReward(-1f / MaxStep);
     }
-
+    //public Vector3 TransformDirection(float x, float y, float z)
+    //{
+    //    Vector3 result = new Vector3(x,y,z);
+    //    return result;
+    //}
     public override void Heuristic(in ActionBuffers actionsOut)
     {
+
+
+
+
+
+        //Debug.Log(transform.TransformPoint(nabiPosition));
+
+        Vector3 newDir = Vector3.RotateTowards( transform.forward, diffrenceDistance_nabi_hand, easing*1.5f, 0.0F);
+        //Debug.DrawRay(nabiPosition, newDir, Color.red);
+         //transform.rotation = Quaternion.LookRotation(newDir);
+
+
+        //Vector3 leftDistance = handTargetPosition - nabiPosition;
+
+        //Debug.Log(Quaternion.LookRotation(newDir));
+
+
+
+
+
+        float leftDistance = Vector3.Distance(handTargetPosition, nabiPosition);
+       // Debug.Log(leftDistance);
+
+        if (Vector3.Distance(handTargetPosition, nabiPosition) < diffrenceDistance)
+        {
+            //nabi.transform.position = nabiPosition;
+        }
+
+
+
         var discreteActionsOut = actionsOut.DiscreteActions;
         discreteActionsOut[0] = 0;
-        if (Input.GetKey(KeyCode.D))
+        if (direction.z > 0)
         {
-            discreteActionsOut[0] = 3;
+            // discreteActionsOut[0] = 3;
         }
-        else if (Input.GetKey(KeyCode.W))
+        else if (leftDistance < 10 &&
+            leftDistance > 0)
         {
-            discreteActionsOut[0] = 1;
+            Debug.Log("aaaaaa");
+            //discreteActionsOut[0] = 1;
         }
-        else if (Input.GetKey(KeyCode.A))
+        else if (direction.z < 0)
         {
-            discreteActionsOut[0] = 4;
+            //discreteActionsOut[0] = 4;
         }
-        else if (Input.GetKey(KeyCode.S))
+        else if (leftDistance < 0)
         {
-            discreteActionsOut[0] = 2;
+            //discreteActionsOut[0] = 2;
         }
     }
 
+
+  
     /// <summary>
     /// Resets the block position and velocities.
     /// </summary>

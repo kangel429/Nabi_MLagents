@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 71e86ad5e8f2640c18aecf7763ef90b7
+ScriptedImporter:
+  fileIDToRecycleName:
+    11400000: Assets/Demonstrations/Test_1.demo
+  externalObjects: {}
+  userData: ' (Unity.MLAgents.Demonstrations.DemonstrationSummary)'
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 7bd65ce151aaa4a41a45312543c56be1, type: 3}
