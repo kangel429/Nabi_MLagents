@@ -1,8 +1,8 @@
 fileFormatVersion: 2
-guid: dfeef91c0d5234c589584f4cb0bc27ad
+guid: 499ceffff4edc4d1d9144d5deca7cdb7
 ScriptedImporter:
   fileIDToRecycleName:
-    11400000: Assets/Demonstrations/Test.demo
+    11400000: Assets/Demonstrations/move.demo
   externalObjects: {}
   userData: ' (Unity.MLAgents.Demonstrations.DemonstrationSummary)'
   assetBundleName: 

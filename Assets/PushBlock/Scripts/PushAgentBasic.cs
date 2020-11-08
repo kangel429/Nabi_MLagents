@@ -11,8 +11,6 @@ public class PushAgentBasic : Agent
     /// The ground. The bounds are used to spawn the elements.
     /// </summary>
     ///
-    public GameObject hand;
-    public GameObject nabi;
     public GameObject ground;
 
     public GameObject area;
@@ -50,12 +48,14 @@ public class PushAgentBasic : Agent
 
 
 
-    Vector3 nabiPosition ;
-    Vector3 handTargetPosition  ;
-    Vector3 diffrenceDistance_nabi_hand ;
-    float easing ;
-    float diffrenceDistance = 7.0f;
-    Vector3 direction;
+    Vector3 nabiPosition;
+    Vector3 handTargetPosition;
+    Vector3 diffrenceDistance_nabi_hand;
+    float easing;
+
+    int check_front;
+    //float diffrenceDistance = 7.0f;
+    //Vector3 direction;
 
     /// <summary>
     /// We will be changing the ground material based on success/failue
@@ -119,7 +119,7 @@ public class PushAgentBasic : Agent
     public void ScoredAGoal()
     {
         // We use a reward of 5.
-        AddReward(5f);
+        AddReward(0.1f);
 
         // By marking an agent as done AgentReset() will be called automatically.
         EndEpisode();
@@ -150,17 +150,16 @@ public class PushAgentBasic : Agent
 
 
         nabiPosition = transform.position;
-        handTargetPosition = new Vector3(hand.transform.position.x, hand.transform.position.y, hand.transform.position.z);
+        handTargetPosition = new Vector3(block.transform.position.x, block.transform.position.y+2, block.transform.position.z);
         diffrenceDistance_nabi_hand = handTargetPosition - nabiPosition;
         easing = 7f * Time.deltaTime;
-        nabiPosition += diffrenceDistance_nabi_hand * easing;
+        //nabiPosition += diffrenceDistance_nabi_hand * easing;
 
-        direction = diffrenceDistance_nabi_hand / diffrenceDistance_nabi_hand.magnitude;
         switch (action)
         {
             case 1:
                 //Debug.Log("ssssss");
-                dirToGo = transform.forward * 1f;
+                dirToGo = transform.forward * 0.1f;
                 //dirToGo = new Vector3(0.3f, 0, 0);
                 break;
             case 2:
@@ -168,20 +167,34 @@ public class PushAgentBasic : Agent
                 break;
             case 3:
                 //rotateDir = transform.right * 1f;
+                //Debug.Log("right side turn");
+                rotateDir = new Vector3(0, 0.01f, 0);
                 break;
             case 4:
                 //rotateDir = transform.right * -1f;
+                //Debug.Log("left side turn");
+                rotateDir = new Vector3(0, -0.01f, 0);
+
                 break;
             case 5:
-               // dirToGo = transform.right * -0.75f;
+                rotateDir = transform.right * 0.1f;
                 break;
             case 6:
-                //dirToGo = transform.right * 0.75f;
+                rotateDir = transform.right * -0.1f;
+                break;
+            case 8:
+                rotateDir = new Vector3(0, 0f, 0);
                 break;
         }
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
         m_AgentRb.AddForce(dirToGo * m_PushBlockSettings.agentRunSpeed,
             ForceMode.VelocityChange);
+
+
+        if(leftDistance<2)
+        {
+            AddReward(1f);
+        }
     }
 
     /// <summary>
@@ -196,67 +209,118 @@ public class PushAgentBasic : Agent
         // Penalty given each step to encourage agent to finish task quickly.
         AddReward(-1f / MaxStep);
     }
-    //public Vector3 TransformDirection(float x, float y, float z)
-    //{
-    //    Vector3 result = new Vector3(x,y,z);
-    //    return result;
-    //}
+    float leftDistance;
     public override void Heuristic(in ActionBuffers actionsOut)
     {
 
+        leftDistance = Vector3.Distance(handTargetPosition, nabiPosition);
+        Vector3 newDir = Vector3.RotateTowards(transform.forward, diffrenceDistance_nabi_hand, easing * 1.5f, 0.0F);
+        
 
 
 
+        //if (Vector3.Distance(handTargetPosition, nabiPosition) < diffrenceDistance)
+        //{
+        //    //transform.rotation = Quaternion.LookRotation(newDir);
+        //    //transform.position = nabiPosition;
+        //}
 
-        //Debug.Log(transform.TransformPoint(nabiPosition));
+        Vector3 nabiDir = handTargetPosition - transform.position;
 
-        Vector3 newDir = Vector3.RotateTowards( transform.forward, diffrenceDistance_nabi_hand, easing*1.5f, 0.0F);
-        //Debug.DrawRay(nabiPosition, newDir, Color.red);
-         //transform.rotation = Quaternion.LookRotation(newDir);
+        float directionY = AngleDir(transform.forward, nabiDir, transform.up);
+        float directionUp = AngleDir(transform.forward, nabiDir, transform.right);
+        check_front = AngleDir_Front(transform.right, nabiDir, transform.up);
+       // Debug.Log( $"check_right_left : {directionY}, Check_Front_Back() : {check_front}, check_up_down() : {directionUp}");  //(0, -1, 0);
 
-
-        //Vector3 leftDistance = handTargetPosition - nabiPosition;
-
-        //Debug.Log(Quaternion.LookRotation(newDir));
-
+        ////////////////////////
+  
 
 
-
-
-        float leftDistance = Vector3.Distance(handTargetPosition, nabiPosition);
-       // Debug.Log(leftDistance);
-
-        if (Vector3.Distance(handTargetPosition, nabiPosition) < diffrenceDistance)
-        {
-            //nabi.transform.position = nabiPosition;
-        }
 
 
 
         var discreteActionsOut = actionsOut.DiscreteActions;
         discreteActionsOut[0] = 0;
-        if (direction.z > 0)
+
+
+        if (directionY == -1)
         {
-            // discreteActionsOut[0] = 3;
+            discreteActionsOut[0] = 3;
         }
-        else if (leftDistance < 10 &&
-            leftDistance > 0)
+        else if (directionY == 1)
         {
-            Debug.Log("aaaaaa");
-            //discreteActionsOut[0] = 1;
+            discreteActionsOut[0] = 4;
         }
-        else if (direction.z < 0)
+        else if (directionY == 0 && (leftDistance > 1))
         {
-            //discreteActionsOut[0] = 4;
+            discreteActionsOut[0] = 1;
         }
-        else if (leftDistance < 0)
-        {
-            //discreteActionsOut[0] = 2;
-        }
+        //if (directionY == 0 && directionUp == 1)
+        //{
+        //    Debug.Log("up");
+        //    discreteActionsOut[0] = 5;
+        //}
+        //else if (directionY == 0 && directionUp == -1)
+        //{
+        //    Debug.Log("down");
+        //    discreteActionsOut[0] = 6;
+        //}
+
     }
 
 
-  
+
+    void OnCollisionEnter(Collision col)
+    {
+        // Touched goal.
+        if (col.gameObject.CompareTag("goal"))
+        {
+            ScoredAGoal();
+        }
+    }
+
+    public int AngleDir(Vector3 fwd, Vector3 targetDir, Vector3 up)
+    {
+        Vector3 perp = Vector3.Cross(fwd*-1, targetDir);
+        float dir = Vector3.Dot(perp, up);
+        //Debug.Log(dir);
+        if (check_front ==1)
+        {
+            if (dir > 2f )
+                return 1;
+            else if (dir < -2f)
+                return -1;
+            else if (dir < 1.5f && dir > -2)
+                return 0;
+
+        }
+        else
+        {
+            if (dir > 0)
+                return 1;
+            else 
+                return -1;
+            
+        }
+
+        return 0;
+
+
+    }
+
+    public int AngleDir_Front(Vector3 fwd, Vector3 targetDir, Vector3 up)
+    {
+        Vector3 perp = Vector3.Cross(fwd * -1, targetDir);
+        float dir = Vector3.Dot(perp, up);
+        //Debug.Log(dir);
+        if (dir > 0f)
+            return 1;
+        else 
+            return -1;
+    
+
+
+    }
     /// <summary>
     /// Resets the block position and velocities.
     /// </summary>
@@ -264,12 +328,13 @@ public class PushAgentBasic : Agent
     {
         // Get a random position for the block.
         block.transform.position = GetRandomSpawnPos();
-
+        block.transform.rotation = Quaternion.Euler(Vector3.zero);
         // Reset block velocity back to zero.
         m_BlockRb.velocity = Vector3.zero;
 
         // Reset block angularVelocity back to zero.
         m_BlockRb.angularVelocity = Vector3.zero;
+
     }
 
     /// <summary>

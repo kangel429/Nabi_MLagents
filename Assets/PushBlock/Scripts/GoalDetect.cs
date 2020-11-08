@@ -15,12 +15,12 @@ public class GoalDetect : MonoBehaviour
     [HideInInspector]
     public PushAgentBasic agent;  //
 
-    void OnCollisionEnter(Collision col)
-    {
-        // Touched goal.
-        if (col.gameObject.CompareTag("goal"))
-        {
-            agent.ScoredAGoal();
-        }
-    }
+    //void OnCollisionEnter(Collision col)
+    //{
+    //    // Touched goal.
+    //    if (col.gameObject.CompareTag("goal"))
+    //    {
+    //        agent.ScoredAGoal();
+    //    }
+    //}
 }

@@ -1,0 +1,29 @@
+{
+    "Nabi": {
+        "checkpoints": [
+            {
+                "steps": 256,
+                "file_path": "results/ppo/Nabi/Nabi-256.nn",
+                "reward": null,
+                "creation_time": 1604800999.881422
+            },
+            {
+                "steps": 640,
+                "file_path": "results/ppo/Nabi/Nabi-640.nn",
+                "reward": null,
+                "creation_time": 1604801127.2469828
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 640,
+            "file_path": "results/ppo/Nabi.nn",
+            "reward": null,
+            "creation_time": 1604801127.2469828
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.1.0",
+        "mlagents_version": "0.21.0.dev0",
+        "tensorflow_version": "2.3.0"
+    }
+}
