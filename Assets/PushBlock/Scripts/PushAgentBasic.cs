@@ -47,15 +47,9 @@ public class PushAgentBasic : Agent
 
 
 
-
-    Vector3 nabiPosition;
-    Vector3 handTargetPosition;
-    Vector3 diffrenceDistance_nabi_hand;
-    float easing;
-
+    float leftDistance;
     int check_front;
-    //float diffrenceDistance = 7.0f;
-    //Vector3 direction;
+
 
     /// <summary>
     /// We will be changing the ground material based on success/failue
@@ -149,11 +143,7 @@ public class PushAgentBasic : Agent
         var action = act[0];
 
 
-        nabiPosition = transform.position;
-        handTargetPosition = new Vector3(block.transform.position.x, block.transform.position.y+2, block.transform.position.z);
-        diffrenceDistance_nabi_hand = handTargetPosition - nabiPosition;
-        easing = 7f * Time.deltaTime;
-        //nabiPosition += diffrenceDistance_nabi_hand * easing;
+       
 
         switch (action)
         {
@@ -209,23 +199,14 @@ public class PushAgentBasic : Agent
         // Penalty given each step to encourage agent to finish task quickly.
         AddReward(-1f / MaxStep);
     }
-    float leftDistance;
+    
     public override void Heuristic(in ActionBuffers actionsOut)
     {
 
-        leftDistance = Vector3.Distance(handTargetPosition, nabiPosition);
-        Vector3 newDir = Vector3.RotateTowards(transform.forward, diffrenceDistance_nabi_hand, easing * 1.5f, 0.0F);
-        
+        leftDistance = Vector3.Distance(block.transform.position, transform.position);
 
 
-
-        //if (Vector3.Distance(handTargetPosition, nabiPosition) < diffrenceDistance)
-        //{
-        //    //transform.rotation = Quaternion.LookRotation(newDir);
-        //    //transform.position = nabiPosition;
-        //}
-
-        Vector3 nabiDir = handTargetPosition - transform.position;
+        Vector3 nabiDir = block.transform.position - transform.position;
 
         float directionY = AngleDir(transform.forward, nabiDir, transform.up);
         float directionUp = AngleDir(transform.forward, nabiDir, transform.right);
@@ -255,6 +236,19 @@ public class PushAgentBasic : Agent
         {
             discreteActionsOut[0] = 1;
         }
+        //else if (directionY == 2)
+        //{
+        //    Debug.Log("up");
+        //    discreteActionsOut[0] = 5;
+        //}
+        //else if (directionY == -2)
+        //{
+        //    Debug.Log("down");
+        //    discreteActionsOut[0] = 6;
+        //}
+
+
+
         //if (directionY == 0 && directionUp == 1)
         //{
         //    Debug.Log("up");
@@ -278,15 +272,14 @@ public class PushAgentBasic : Agent
             ScoredAGoal();
         }
     }
-
     public int AngleDir(Vector3 fwd, Vector3 targetDir, Vector3 up)
     {
-        Vector3 perp = Vector3.Cross(fwd*-1, targetDir);
+        Vector3 perp = Vector3.Cross(fwd * -1, targetDir);
         float dir = Vector3.Dot(perp, up);
         //Debug.Log(dir);
-        if (check_front ==1)
+        if (check_front == 1)
         {
-            if (dir > 2f )
+            if (dir > 2f)
                 return 1;
             else if (dir < -2f)
                 return -1;
@@ -298,15 +291,63 @@ public class PushAgentBasic : Agent
         {
             if (dir > 0)
                 return 1;
-            else 
+            else
                 return -1;
-            
+
         }
 
         return 0;
 
 
     }
+    //public int AngleDir(Vector3 fwd, Vector3 targetDir, Vector3 up)
+    //{
+    //    Vector3 perp = Vector3.Cross(fwd*-1, targetDir);
+    //    float dir = Vector3.Dot(perp, up);
+
+
+    //    Vector3 perp1 = Vector3.Cross(transform.forward * -1, targetDir);
+    //    float dir1 = Vector3.Dot(perp1, transform.right);
+    //    //Debug.Log(dir);
+    //    if (check_front ==1)
+    //    {
+    //        if (dir > 2f)
+    //            return 1;
+    //        else if (dir < -2f)
+    //            return -1;
+    //        else if (dir < 2f && dir > -2)
+    //        {
+    //            //return 0;
+    //            if (dir1 > 2f)
+    //            {
+    //                return 2;
+    //            }
+    //            else if (dir1 < -2f)
+    //            {
+    //                return -2;
+    //            }
+    //            else if (dir1 < 2f && dir1 > -2)
+    //            {
+    //                return 0;
+
+    //            }
+    //        }
+                
+
+    //    }
+    //    else
+    //    {
+    //        if (dir > 0)
+    //            return 1;
+    //        else 
+    //            return -1;
+            
+    //    }
+
+    //    return 0;
+
+
+    //}
 
     public int AngleDir_Front(Vector3 fwd, Vector3 targetDir, Vector3 up)
     {

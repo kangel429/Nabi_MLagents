@@ -54,18 +54,18 @@ public class ControllerNabi : MonoBehaviour
         {
             transform.Rotate(new Vector3(0, -0.5f, 0));
         }
-        difDistance = goal.transform.position - transform.position;
-        easing = 130f * Time.deltaTime;
-        Vector3 newDir = Vector3.RotateTowards(transform.forward, difDistance, easing, 0.0F);
-        if (Vector3.Distance(goal.transform.localPosition, transform.localPosition) > 0.3f)
-        {
+        //difDistance = goal.transform.position - transform.position;
+        //easing = 130f * Time.deltaTime;
+        //Vector3 newDir = Vector3.RotateTowards(transform.forward, difDistance, easing, 0.0F);
+        //if (Vector3.Distance(goal.transform.localPosition, transform.localPosition) > 0.3f)
+        //{
             
-            transform.rotation = Quaternion.LookRotation(newDir);
+        //    transform.rotation = Quaternion.LookRotation(newDir);
 
-        }
-        if (Vector3.Distance(nabi.transform.localPosition, transform.localPosition) < 2f)
-        {
-            transform.position += (transform.forward * 0.1f);
-        }
+        //}
+        //if (Vector3.Distance(nabi.transform.localPosition, transform.localPosition) < 2f)
+        //{
+        //    transform.position += (transform.forward * 0.1f);
+        //}
     }
 }
