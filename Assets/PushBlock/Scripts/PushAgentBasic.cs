@@ -45,10 +45,10 @@ public class PushAgentBasic : Agent
     Rigidbody m_AgentRb;  //cached on initialization
     Material m_GroundMaterial; //cached on Awake()
 
-
+    Vector3 vecLeftDistance;
 
     float leftDistance;
-    int check_front;
+    bool check_front;
 
 
     /// <summary>
@@ -113,7 +113,15 @@ public class PushAgentBasic : Agent
     public void ScoredAGoal()
     {
         // We use a reward of 5.
-        AddReward(0.1f);
+        if(leftDistance < 1)
+        {
+            AddReward(5);
+        }
+        else
+        {
+            AddReward(-1);
+        }
+        
 
         // By marking an agent as done AgentReset() will be called automatically.
         EndEpisode();
@@ -167,15 +175,16 @@ public class PushAgentBasic : Agent
 
                 break;
             case 5:
-                rotateDir = transform.right * 0.1f;
+                rotateDir = new Vector3(-0.01f, 0, 0);
                 break;
             case 6:
-                rotateDir = transform.right * -0.1f;
+                rotateDir = new Vector3(0.01f, 0, 0);
                 break;
             case 8:
                 rotateDir = new Vector3(0, 0f, 0);
                 break;
         }
+       
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
         m_AgentRb.AddForce(dirToGo * m_PushBlockSettings.agentRunSpeed,
             ForceMode.VelocityChange);
@@ -183,7 +192,7 @@ public class PushAgentBasic : Agent
 
         if(leftDistance<2)
         {
-            AddReward(1f);
+            AddReward(0.5f);
         }
     }
 
@@ -204,13 +213,10 @@ public class PushAgentBasic : Agent
     {
 
         leftDistance = Vector3.Distance(block.transform.position, transform.position);
+        vecLeftDistance = block.transform.position - transform.position;
 
-
-        Vector3 nabiDir = block.transform.position - transform.position;
-
-        float directionY = AngleDir(transform.forward, nabiDir, transform.up);
-        float directionUp = AngleDir(transform.forward, nabiDir, transform.right);
-        check_front = AngleDir_Front(transform.right, nabiDir, transform.up);
+        float direction = AngleDir();
+        check_front = AngleDir_Front(transform.right, vecLeftDistance, transform.up);
        // Debug.Log( $"check_right_left : {directionY}, Check_Front_Back() : {check_front}, check_up_down() : {directionUp}");  //(0, -1, 0);
 
         ////////////////////////
@@ -224,41 +230,34 @@ public class PushAgentBasic : Agent
         discreteActionsOut[0] = 0;
 
 
-        if (directionY == -1)
+        if (direction == -1)
         {
+            Debug.Log("right");
             discreteActionsOut[0] = 3;
         }
-        else if (directionY == 1)
+        else if (direction == 1)
         {
+            Debug.Log("left");
             discreteActionsOut[0] = 4;
         }
-        else if (directionY == 0 && (leftDistance > 1))
+        else if (direction == 0 && (leftDistance > 1))
         {
+            Debug.Log("go");
             discreteActionsOut[0] = 1;
         }
-        //else if (directionY == 2)
-        //{
-        //    Debug.Log("up");
-        //    discreteActionsOut[0] = 5;
-        //}
-        //else if (directionY == -2)
-        //{
-        //    Debug.Log("down");
-        //    discreteActionsOut[0] = 6;
-        //}
+        else if (direction == 2)
+        {
+            Debug.Log("up");
+            discreteActionsOut[0] = 5;
+        }
+        else if (direction == -2)
+        {
+            Debug.Log("down");
+            discreteActionsOut[0] = 6;
+        }
 
 
 
-        //if (directionY == 0 && directionUp == 1)
-        //{
-        //    Debug.Log("up");
-        //    discreteActionsOut[0] = 5;
-        //}
-        //else if (directionY == 0 && directionUp == -1)
-        //{
-        //    Debug.Log("down");
-        //    discreteActionsOut[0] = 6;
-        //}
 
     }
 
@@ -272,92 +271,69 @@ public class PushAgentBasic : Agent
             ScoredAGoal();
         }
     }
-    public int AngleDir(Vector3 fwd, Vector3 targetDir, Vector3 up)
+
+    public int AngleDir()
     {
-        Vector3 perp = Vector3.Cross(fwd * -1, targetDir);
-        float dir = Vector3.Dot(perp, up);
-        //Debug.Log(dir);
-        if (check_front == 1)
+        
+
+        Vector3 perp = Vector3.Cross(transform.forward * -1, vecLeftDistance);
+        float dir = Vector3.Dot(perp, transform.up);
+
+
+        Vector3 perp1 = Vector3.Cross(transform.forward * -1, vecLeftDistance);
+        float dir1 = Vector3.Dot(perp1, transform.right);
+        float frontDegree = leftDistance * 0.25f;
+
+
+        if (check_front)
         {
-            if (dir > 2f)
+            if (dir > frontDegree)
                 return 1;
-            else if (dir < -2f)
+            else if (dir < frontDegree * -1f)
                 return -1;
-            else if (dir < 1.5f && dir > -2)
-                return 0;
+            else if (dir < frontDegree && dir > frontDegree * -1f)
+            {
+                //return 0;
+                if (dir1 > (frontDegree * 1f)+1f)
+                {
+                    return 2;
+                }
+                else if (dir1 < (frontDegree * -1f) - 1f)
+                {
+                    return -2;
+                }
+                else if (dir1 < (frontDegree * 1f) + 1f && dir1 > (frontDegree * -1f) - 1f)
+                {
+                    return 0;
+
+                }
+            }
+                
 
         }
         else
         {
             if (dir > 0)
                 return 1;
-            else
+            else 
                 return -1;
-
+            
         }
 
         return 0;
 
 
     }
-    //public int AngleDir(Vector3 fwd, Vector3 targetDir, Vector3 up)
-    //{
-    //    Vector3 perp = Vector3.Cross(fwd*-1, targetDir);
-    //    float dir = Vector3.Dot(perp, up);
 
-
-    //    Vector3 perp1 = Vector3.Cross(transform.forward * -1, targetDir);
-    //    float dir1 = Vector3.Dot(perp1, transform.right);
-    //    //Debug.Log(dir);
-    //    if (check_front ==1)
-    //    {
-    //        if (dir > 2f)
-    //            return 1;
-    //        else if (dir < -2f)
-    //            return -1;
-    //        else if (dir < 2f && dir > -2)
-    //        {
-    //            //return 0;
-    //            if (dir1 > 2f)
-    //            {
-    //                return 2;
-    //            }
-    //            else if (dir1 < -2f)
-    //            {
-    //                return -2;
-    //            }
-    //            else if (dir1 < 2f && dir1 > -2)
-    //            {
-    //                return 0;
-
-    //            }
-    //        }
-                
-
-    //    }
-    //    else
-    //    {
-    //        if (dir > 0)
-    //            return 1;
-    //        else 
-    //            return -1;
-            
-    //    }
-
-    //    return 0;
-
-
-    //}
-
-    public int AngleDir_Front(Vector3 fwd, Vector3 targetDir, Vector3 up)
+    public bool AngleDir_Front(Vector3 fwd, Vector3 targetDir, Vector3 up)
     {
         Vector3 perp = Vector3.Cross(fwd * -1, targetDir);
         float dir = Vector3.Dot(perp, up);
         //Debug.Log(dir);
         if (dir > 0f)
-            return 1;
+            return true;
         else 
-            return -1;
+            return false;
     
 
 

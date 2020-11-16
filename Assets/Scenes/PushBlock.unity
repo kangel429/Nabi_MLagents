@@ -565,6 +565,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -1.43
       objectReference: {fileID: 0}
+    - target: {fileID: 4491958117158432, guid: 03bcc81e249714a22bb411dddcc5d15e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 10.2
+      objectReference: {fileID: 0}
     - target: {fileID: 4544987641442146, guid: 03bcc81e249714a22bb411dddcc5d15e, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
@@ -643,6 +647,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_UseGravity
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 54817351390947638, guid: 03bcc81e249714a22bb411dddcc5d15e,
+        type: 3}
+      propertyPath: m_Constraints
+      value: 48
       objectReference: {fileID: 0}
     - target: {fileID: 65500237382738106, guid: 03bcc81e249714a22bb411dddcc5d15e,
         type: 3}
