@@ -1,2 +1,0 @@
-model_checkpoint_path: "Nabi-640.ckpt"
-all_model_checkpoint_paths: "Nabi-640.ckpt"

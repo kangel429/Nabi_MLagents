@@ -4,7 +4,7 @@ using System.Collections;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
-
+using Unity.MLAgents.Sensors;
 public class PushAgentBasic : Agent
 {
     /// <summary>
@@ -49,7 +49,7 @@ public class PushAgentBasic : Agent
 
     float leftDistance;
     bool check_front;
-
+    float direction;
 
     /// <summary>
     /// We will be changing the ground material based on success/failue
@@ -83,7 +83,25 @@ public class PushAgentBasic : Agent
 
         SetResetParameters();
     }
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        sensor.AddObservation(transform.InverseTransformDirection(m_AgentRb.velocity));
 
+        sensor.AddObservation(Vector3.Distance(transform.position, goal.transform.position));
+
+
+        direction = AngleDir();
+
+        check_front = AngleDir_Front(transform.right, vecLeftDistance, transform.up);
+
+        sensor.AddObservation(vecLeftDistance.normalized);
+        sensor.AddObservation(direction);
+        sensor.AddObservation(check_front);
+
+
+
+
+    }
     /// <summary>
     /// Use the ground's bounds to pick a random spawn position.
     /// </summary>
@@ -113,15 +131,8 @@ public class PushAgentBasic : Agent
     public void ScoredAGoal()
     {
         // We use a reward of 5.
-        if(leftDistance < 1)
-        {
-            AddReward(5);
-        }
-        else
-        {
-            AddReward(-1);
-        }
-        
+        AddReward(5);
+
 
         // By marking an agent as done AgentReset() will be called automatically.
         EndEpisode();
@@ -150,18 +161,16 @@ public class PushAgentBasic : Agent
 
         var action = act[0];
 
+        leftDistance = Vector3.Distance(block.transform.position, transform.position);
+        vecLeftDistance = block.transform.position - transform.position;
 
-       
 
         switch (action)
         {
             case 1:
                 //Debug.Log("ssssss");
-                dirToGo = transform.forward * 0.1f;
+                dirToGo = transform.forward * 10f * Time.deltaTime;
                 //dirToGo = new Vector3(0.3f, 0, 0);
-                break;
-            case 2:
-                //dirToGo = transform.forward * -1f;
                 break;
             case 3:
                 //rotateDir = transform.right * 1f;
@@ -180,9 +189,7 @@ public class PushAgentBasic : Agent
             case 6:
                 rotateDir = new Vector3(0.01f, 0, 0);
                 break;
-            case 8:
-                rotateDir = new Vector3(0, 0f, 0);
-                break;
+
         }
        
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
@@ -190,9 +197,10 @@ public class PushAgentBasic : Agent
             ForceMode.VelocityChange);
 
 
-        if(leftDistance<2)
+        if(leftDistance<3)
         {
-            AddReward(0.5f);
+            //Debug.Log("보상을 받고 있습니다");
+            AddReward(0.1f);
         }
     }
 
@@ -212,10 +220,9 @@ public class PushAgentBasic : Agent
     public override void Heuristic(in ActionBuffers actionsOut)
     {
 
-        leftDistance = Vector3.Distance(block.transform.position, transform.position);
-        vecLeftDistance = block.transform.position - transform.position;
+        
 
-        float direction = AngleDir();
+        direction = AngleDir();
         check_front = AngleDir_Front(transform.right, vecLeftDistance, transform.up);
        // Debug.Log( $"check_right_left : {directionY}, Check_Front_Back() : {check_front}, check_up_down() : {directionUp}");  //(0, -1, 0);
 
@@ -232,27 +239,27 @@ public class PushAgentBasic : Agent
 
         if (direction == -1)
         {
-            Debug.Log("right");
+            //Debug.Log("right");
             discreteActionsOut[0] = 3;
         }
         else if (direction == 1)
         {
-            Debug.Log("left");
+            //Debug.Log("left");
             discreteActionsOut[0] = 4;
         }
         else if (direction == 0 && (leftDistance > 1))
         {
-            Debug.Log("go");
+            //Debug.Log("go");
             discreteActionsOut[0] = 1;
         }
         else if (direction == 2)
         {
-            Debug.Log("up");
+            //Debug.Log("up");
             discreteActionsOut[0] = 5;
         }
         else if (direction == -2)
         {
-            Debug.Log("down");
+            //Debug.Log("down");
             discreteActionsOut[0] = 6;
         }
 
@@ -263,18 +270,33 @@ public class PushAgentBasic : Agent
 
 
 
-    void OnCollisionEnter(Collision col)
+    void OnTriggerStay(Collider col)
     {
         // Touched goal.
         if (col.gameObject.CompareTag("goal"))
         {
-            ScoredAGoal();
+            if(leftDistance < 3f)
+            {
+                ScoredAGoal();
+                Debug.Log("Goal in");
+            }
+            else
+            {
+                Debug.Log("Failed - alone Goal in");
+                SetReward(-1f);
+                EndEpisode();
+            }
+            
+           
+        }
+        else
+        {
+            Debug.Log("Failed - leftDistance : " + leftDistance);
         }
     }
 
     public int AngleDir()
     {
-        
 
         Vector3 perp = Vector3.Cross(transform.forward * -1, vecLeftDistance);
         float dir = Vector3.Dot(perp, transform.up);
@@ -294,7 +316,7 @@ public class PushAgentBasic : Agent
             else if (dir < frontDegree && dir > frontDegree * -1f)
             {
                 //return 0;
-                if (dir1 > (frontDegree * 1f)+1f)
+                if (dir1 > (frontDegree * 1f) + 1f)
                 {
                     return 2;
                 }
@@ -343,6 +365,7 @@ public class PushAgentBasic : Agent
     /// </summary>
     void ResetBlock()
     {
+        Debug.Log("Reset!!");
         // Get a random position for the block.
         block.transform.position = GetRandomSpawnPos();
         block.transform.rotation = Quaternion.Euler(Vector3.zero);
@@ -360,6 +383,7 @@ public class PushAgentBasic : Agent
     /// </summary>
     public override void OnEpisodeBegin()
     {
+        Debug.Log("Episode Begin");
         var rotation = Random.Range(0, 4);
         var rotationAngle = rotation * 90f;
         area.transform.Rotate(new Vector3(0f, rotationAngle, 0f));

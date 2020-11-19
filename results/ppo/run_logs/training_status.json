@@ -1,24 +1,30 @@
 {
-    "Nabi": {
+    "PushBlock": {
         "checkpoints": [
             {
-                "steps": 256,
-                "file_path": "results/ppo/Nabi/Nabi-256.nn",
-                "reward": null,
-                "creation_time": 1604800999.881422
+                "steps": 499971,
+                "file_path": "results/ppo/PushBlock/PushBlock-499971.nn",
+                "reward": 6.241422408984767,
+                "creation_time": 1605781335.6127071
             },
             {
-                "steps": 640,
-                "file_path": "results/ppo/Nabi/Nabi-640.nn",
-                "reward": null,
-                "creation_time": 1604801127.2469828
+                "steps": 999996,
+                "file_path": "results/ppo/PushBlock/PushBlock-999996.nn",
+                "reward": 10.03656896805534,
+                "creation_time": 1605782335.1590028
+            },
+            {
+                "steps": 1288130,
+                "file_path": "results/ppo/PushBlock/PushBlock-1288130.nn",
+                "reward": 10.360012873521317,
+                "creation_time": 1605782795.468294
             }
         ],
         "final_checkpoint": {
-            "steps": 640,
-            "file_path": "results/ppo/Nabi.nn",
-            "reward": null,
-            "creation_time": 1604801127.2469828
+            "steps": 1288130,
+            "file_path": "results/ppo/PushBlock.nn",
+            "reward": 10.360012873521317,
+            "creation_time": 1605782795.468294
         }
     },
     "metadata": {
