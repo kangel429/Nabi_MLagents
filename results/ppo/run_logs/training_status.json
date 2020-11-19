@@ -2,29 +2,29 @@
     "PushBlock": {
         "checkpoints": [
             {
-                "steps": 499971,
-                "file_path": "results/ppo/PushBlock/PushBlock-499971.nn",
-                "reward": 6.241422408984767,
-                "creation_time": 1605781335.6127071
+                "steps": 499975,
+                "file_path": "results/ppo/PushBlock/PushBlock-499975.nn",
+                "reward": 11.0623330672582,
+                "creation_time": 1605786590.0666728
             },
             {
-                "steps": 999996,
-                "file_path": "results/ppo/PushBlock/PushBlock-999996.nn",
-                "reward": 10.03656896805534,
-                "creation_time": 1605782335.1590028
+                "steps": 999983,
+                "file_path": "results/ppo/PushBlock/PushBlock-999983.nn",
+                "reward": 12.241399453021586,
+                "creation_time": 1605787631.7799602
             },
             {
-                "steps": 1288130,
-                "file_path": "results/ppo/PushBlock/PushBlock-1288130.nn",
-                "reward": 10.360012873521317,
-                "creation_time": 1605782795.468294
+                "steps": 1138458,
+                "file_path": "results/ppo/PushBlock/PushBlock-1138458.nn",
+                "reward": null,
+                "creation_time": 1605787957.1430578
             }
         ],
         "final_checkpoint": {
-            "steps": 1288130,
+            "steps": 1138458,
             "file_path": "results/ppo/PushBlock.nn",
-            "reward": 10.360012873521317,
-            "creation_time": 1605782795.468294
+            "reward": null,
+            "creation_time": 1605787957.1430578
         }
     },
     "metadata": {

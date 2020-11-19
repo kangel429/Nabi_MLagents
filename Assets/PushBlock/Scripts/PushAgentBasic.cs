@@ -113,10 +113,10 @@ public class PushAgentBasic : Agent
         {
             var randomPosX = Random.Range(-areaBounds.extents.x * m_PushBlockSettings.spawnAreaMarginMultiplier,
                 areaBounds.extents.x * m_PushBlockSettings.spawnAreaMarginMultiplier);
-
+            var randomPosY = Random.Range(0.01f, 5f);
             var randomPosZ = Random.Range(-areaBounds.extents.z * m_PushBlockSettings.spawnAreaMarginMultiplier,
                 areaBounds.extents.z * m_PushBlockSettings.spawnAreaMarginMultiplier);
-            randomSpawnPos = ground.transform.position + new Vector3(randomPosX, 1f, randomPosZ);
+            randomSpawnPos = ground.transform.position + new Vector3(randomPosX, randomPosY, randomPosZ);
             if (Physics.CheckBox(randomSpawnPos, new Vector3(2.5f, 0.01f, 2.5f)) == false)
             {
                 foundNewSpawnLocation = true;
@@ -199,7 +199,7 @@ public class PushAgentBasic : Agent
 
         if(leftDistance<3)
         {
-            //Debug.Log("보상을 받고 있습니다");
+            Debug.Log("Gain reward");
             AddReward(0.1f);
         }
     }
@@ -275,24 +275,21 @@ public class PushAgentBasic : Agent
         // Touched goal.
         if (col.gameObject.CompareTag("goal"))
         {
-            if(leftDistance < 3f)
+            if(leftDistance < 3.1f)
             {
                 ScoredAGoal();
                 Debug.Log("Goal in");
             }
             else
             {
-                Debug.Log("Failed - alone Goal in");
+                Debug.Log("Failed - alone Goal in   "   + +leftDistance);
                 SetReward(-1f);
                 EndEpisode();
             }
             
            
         }
-        else
-        {
-            Debug.Log("Failed - leftDistance : " + leftDistance);
-        }
+    
     }
 
     public int AngleDir()
@@ -368,7 +365,7 @@ public class PushAgentBasic : Agent
         Debug.Log("Reset!!");
         // Get a random position for the block.
         block.transform.position = GetRandomSpawnPos();
-        block.transform.rotation = Quaternion.Euler(Vector3.zero);
+        block.transform.localRotation = Quaternion.Euler(Vector3.zero);
         // Reset block velocity back to zero.
         m_BlockRb.velocity = Vector3.zero;
 
@@ -390,6 +387,7 @@ public class PushAgentBasic : Agent
 
         ResetBlock();
         transform.position = GetRandomSpawnPos();
+        transform.localRotation = Quaternion.Euler(Vector3.zero);
         m_AgentRb.velocity = Vector3.zero;
         m_AgentRb.angularVelocity = Vector3.zero;
 
