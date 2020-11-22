@@ -85,6 +85,7 @@ public class PushAgentBasic : Agent
     }
     public override void CollectObservations(VectorSensor sensor)
     {
+        sensor.AddObservation(transform.position);
         sensor.AddObservation(transform.InverseTransformDirection(m_AgentRb.velocity));
 
         sensor.AddObservation(Vector3.Distance(transform.position, goal.transform.position));
@@ -193,12 +194,15 @@ public class PushAgentBasic : Agent
         }
        
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
+
         m_AgentRb.AddForce(dirToGo * m_PushBlockSettings.agentRunSpeed,
             ForceMode.VelocityChange);
 
 
         if(leftDistance<3)
         {
+           // transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, 0);
+
             Debug.Log("Gain reward");
             AddReward(0.1f);
         }
@@ -216,7 +220,10 @@ public class PushAgentBasic : Agent
         // Penalty given each step to encourage agent to finish task quickly.
         AddReward(-1f / MaxStep);
     }
-    
+
+    private float TimeLeft = 0.1f;
+    private float nextTime = 0.0f;
+
     public override void Heuristic(in ActionBuffers actionsOut)
     {
 
@@ -227,7 +234,7 @@ public class PushAgentBasic : Agent
        // Debug.Log( $"check_right_left : {directionY}, Check_Front_Back() : {check_front}, check_up_down() : {directionUp}");  //(0, -1, 0);
 
         ////////////////////////
-  
+        
 
 
 
@@ -236,38 +243,62 @@ public class PushAgentBasic : Agent
         var discreteActionsOut = actionsOut.DiscreteActions;
         discreteActionsOut[0] = 0;
 
+        if(block.activeSelf == true  && leftDistance <12)
+        {
+            if (direction == -1)
+            {
+                //Debug.Log("right");
+                discreteActionsOut[0] = 3;
+            }
+            else if (direction == 1)
+            {
+                //Debug.Log("left");
+                discreteActionsOut[0] = 4;
+            }
+            else if (direction == 0 && (leftDistance > 1))
+            {
+                //Debug.Log("go");
+                discreteActionsOut[0] = 1;
+            }
+            else if (direction == 2)
+            {
+                //Debug.Log("up");
+                discreteActionsOut[0] = 5;
+            }
+            else if (direction == -2)
+            {
+                //Debug.Log("down");
+                discreteActionsOut[0] = 6;
+            }
+        }
+        else if(block.activeSelf == false || leftDistance >= 12)
+        {
+            
+            if (Time.time > nextTime)
+            {
+                Debug.Log("Auto matic move");
+                nextTime = Time.time + TimeLeft;
+                discreteActionsOut[0] = (int)Random.Range(3, 5);
+            }
+            else
+            {
+                discreteActionsOut[0] = 1;
+            }
+        }
 
-        if (direction == -1)
-        {
-            //Debug.Log("right");
-            discreteActionsOut[0] = 3;
-        }
-        else if (direction == 1)
-        {
-            //Debug.Log("left");
-            discreteActionsOut[0] = 4;
-        }
-        else if (direction == 0 && (leftDistance > 1))
-        {
-            //Debug.Log("go");
-            discreteActionsOut[0] = 1;
-        }
-        else if (direction == 2)
-        {
-            //Debug.Log("up");
-            discreteActionsOut[0] = 5;
-        }
-        else if (direction == -2)
-        {
-            //Debug.Log("down");
-            discreteActionsOut[0] = 6;
-        }
 
 
 
 
     }
-
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("agent"))
+        {
+            Debug.Log("Crush other Agent");
+            AddReward(-1f);
+        }
+    }
 
 
     void OnTriggerStay(Collider col)
