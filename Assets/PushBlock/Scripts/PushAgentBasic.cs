@@ -49,6 +49,7 @@ public class PushAgentBasic : Agent
 
     float leftDistance;
     bool check_front;
+    bool check_crush;
     float direction;
 
     /// <summary>
@@ -57,10 +58,11 @@ public class PushAgentBasic : Agent
     Renderer m_GroundRenderer;
 
     EnvironmentParameters m_ResetParams;
-
+    public Animator butterfly;
     void Awake()
     {
         m_PushBlockSettings = FindObjectOfType<PushBlockSettings>();
+        butterfly = this.gameObject.GetComponent<Animator>();
     }
 
     public override void Initialize()
@@ -85,19 +87,20 @@ public class PushAgentBasic : Agent
     }
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(transform.position);
-        sensor.AddObservation(transform.InverseTransformDirection(m_AgentRb.velocity));
+        //sensor.AddObservation(transform.position.normalized);//3
+        //sensor.AddObservation(blockPosition.normalized);//3
+        sensor.AddObservation(transform.InverseTransformDirection(m_AgentRb.velocity).normalized);//3
 
-        sensor.AddObservation(Vector3.Distance(transform.position, goal.transform.position));
+        sensor.AddObservation(Vector3.Distance(transform.position, goal.transform.position));//1
 
 
         direction = AngleDir();
 
         check_front = AngleDir_Front(transform.right, vecLeftDistance, transform.up);
 
-        sensor.AddObservation(vecLeftDistance.normalized);
-        sensor.AddObservation(direction);
-        sensor.AddObservation(check_front);
+        sensor.AddObservation(vecLeftDistance.normalized);//3
+        sensor.AddObservation(direction);//1
+        sensor.AddObservation(check_front);//1
 
 
 
@@ -114,7 +117,7 @@ public class PushAgentBasic : Agent
         {
             var randomPosX = Random.Range(-areaBounds.extents.x * m_PushBlockSettings.spawnAreaMarginMultiplier,
                 areaBounds.extents.x * m_PushBlockSettings.spawnAreaMarginMultiplier);
-            var randomPosY = Random.Range(0.01f, 5f);
+            var randomPosY = Random.Range(0.01f, 6f);
             var randomPosZ = Random.Range(-areaBounds.extents.z * m_PushBlockSettings.spawnAreaMarginMultiplier,
                 areaBounds.extents.z * m_PushBlockSettings.spawnAreaMarginMultiplier);
             randomSpawnPos = ground.transform.position + new Vector3(randomPosX, randomPosY, randomPosZ);
@@ -151,7 +154,7 @@ public class PushAgentBasic : Agent
         yield return new WaitForSeconds(time); // Wait for 2 sec
         m_GroundRenderer.material = m_GroundMaterial;
     }
-
+    Vector3 blockPosition;
     /// <summary>
     /// Moves the agent according to the selected action.
     /// </summary>
@@ -161,16 +164,16 @@ public class PushAgentBasic : Agent
         var rotateDir = Vector3.zero;
 
         var action = act[0];
-
-        leftDistance = Vector3.Distance(block.transform.position, transform.position);
-        vecLeftDistance = block.transform.position - transform.position;
+        blockPosition = new Vector3(block.transform.position.x, block.transform.position.y+0.3f, block.transform.position.z);
+        leftDistance = Vector3.Distance(blockPosition, transform.position);
+        vecLeftDistance = blockPosition - transform.position;
 
 
         switch (action)
         {
             case 1:
                 //Debug.Log("ssssss");
-                dirToGo = transform.forward * 10f * Time.deltaTime;
+                dirToGo = transform.forward * 80f * Time.deltaTime;
                 //dirToGo = new Vector3(0.3f, 0, 0);
                 break;
             case 3:
@@ -185,10 +188,12 @@ public class PushAgentBasic : Agent
 
                 break;
             case 5:
-                rotateDir = new Vector3(-0.01f, 0, 0);
+                //rotateDir = new Vector3(-0.01f, 0, 0);
+                dirToGo = new Vector3(0,80* Time.deltaTime,0);
                 break;
             case 6:
-                rotateDir = new Vector3(0.01f, 0, 0);
+                //rotateDir = new Vector3(0.01f, 0, 0);
+                dirToGo = new Vector3(0, -80 * Time.deltaTime, 0);
                 break;
 
         }
@@ -199,12 +204,27 @@ public class PushAgentBasic : Agent
             ForceMode.VelocityChange);
 
 
-        if(leftDistance<3)
+        if(block.activeSelf == true && leftDistance < 3)
         {
-           // transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, 0);
-
+            // transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, 0);
+            //AnimationStop();
             Debug.Log("Gain reward");
             AddReward(0.1f);
+        }
+        //else if(block.activeSelf == true && leftDistance >=3)
+        //{
+        //    AnimationGo();
+        //}
+        TooFarAway_Reset();
+
+
+    }
+    void resetCrush()
+    {
+        if (check_crush)
+        {
+            Debug.Log("resetCrush");
+            check_crush = false;
         }
     }
 
@@ -243,7 +263,7 @@ public class PushAgentBasic : Agent
         var discreteActionsOut = actionsOut.DiscreteActions;
         discreteActionsOut[0] = 0;
 
-        if(block.activeSelf == true  && leftDistance <12)
+        if(block.activeSelf == true  && leftDistance <20)
         {
             if (direction == -1)
             {
@@ -271,14 +291,14 @@ public class PushAgentBasic : Agent
                 discreteActionsOut[0] = 6;
             }
         }
-        else if(block.activeSelf == false || leftDistance >= 12)
+        else if(block.activeSelf == false || leftDistance >= 20)
         {
             
             if (Time.time > nextTime)
             {
                 Debug.Log("Auto matic move");
                 nextTime = Time.time + TimeLeft;
-                discreteActionsOut[0] = (int)Random.Range(3, 5);
+                discreteActionsOut[0] = (int)Random.Range(3, 4);
             }
             else
             {
@@ -288,7 +308,7 @@ public class PushAgentBasic : Agent
 
 
 
-
+        
 
     }
     private void OnCollisionEnter(Collision collision)
@@ -296,6 +316,8 @@ public class PushAgentBasic : Agent
         if (collision.gameObject.CompareTag("agent"))
         {
             Debug.Log("Crush other Agent");
+            check_crush = true;
+            resetCrush();
             AddReward(-1f);
         }
     }
@@ -306,7 +328,7 @@ public class PushAgentBasic : Agent
         // Touched goal.
         if (col.gameObject.CompareTag("goal"))
         {
-            if(leftDistance < 3.1f)
+            if(leftDistance < 5f)
             {
                 ScoredAGoal();
                 Debug.Log("Goal in");
@@ -314,13 +336,26 @@ public class PushAgentBasic : Agent
             else
             {
                 Debug.Log("Failed - alone Goal in   "   + +leftDistance);
-                SetReward(-1f);
+                SetReward(-2f);
                 EndEpisode();
             }
             
            
         }
     
+    }
+
+    private void TooFarAway_Reset()
+    {
+        if(block.activeSelf==true && leftDistance >40)
+        {
+
+            Debug.Log("Too far away, so it will be reset");
+            SetReward(-2f);
+            EndEpisode();
+            
+
+        }
     }
 
     public int AngleDir()
@@ -447,5 +482,28 @@ public class PushAgentBasic : Agent
     {
         SetGroundMaterialFriction();
         SetBlockProperties();
+    }
+
+    void AnimationGo()
+    {
+
+        butterfly.SetBool("IsDoubleFlapping", true);
+        butterfly.SetBool("TurnLeft", false);
+        butterfly.SetBool("TurnRight", false);
+        butterfly.SetBool("GoForward", false);
+        butterfly.SetBool("IsSlowFlapping", false);
+        butterfly.SetBool("IsTouched", false);
+        butterfly.SetBool("IsReturning", true);
+    }
+
+    void AnimationStop()
+    {
+        butterfly.SetBool("IsDoubleFlapping", false);
+        butterfly.SetBool("TurnLeft", false);
+        butterfly.SetBool("TurnRight", false);
+        butterfly.SetBool("GoForward", false);
+        butterfly.SetBool("IsSlowFlapping", false);
+        butterfly.SetBool("IsTouched", true);
+        butterfly.SetBool("IsReturning", true);
     }
 }
